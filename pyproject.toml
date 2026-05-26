@@ -1,0 +1,12 @@
+[project]
+name = "elastica-rl"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "gymnasium>=1.2.3",
+    "numpy>=2.4.6",
+    "pyelastica>=0.3.3.post2",
+    "stable-baselines3>=2.8.0",
+]
