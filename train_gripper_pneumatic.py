@@ -6,7 +6,7 @@ import numpy as np
 from gymnasium import spaces
 from stable_baselines3 import PPO
 from stable_baselines3.common.monitor import Monitor
-from stable_baselines3.common.vec_env import SubprocVecEnv
+from stable_baselines3.common.vec_env import SubprocVecEnv, VecNormalize
 
 from elastica import *
 from elastica.timestepper.symplectic_steppers import PositionVerlet
@@ -172,6 +172,9 @@ if __name__ == "__main__":
 
     env = SubprocVecEnv([make_env() for _ in range(NUM_CORES)])
 
+    # This automatically scales observations and rewards to a stable bell curve
+    env = VecNormalize(env, norm_obs=True, norm_reward=True, clip_obs=10.0)
+
     policy_kwargs = dict(
         features_extractor_class=StateEncoder,
         features_extractor_kwargs=dict(features_dim=128),
@@ -191,6 +194,7 @@ if __name__ == "__main__":
 
     print(f"Starting training with Domain Randomization enabled on {NUM_CORES} cores...")
     model.learn(total_timesteps=TOTAL_TIMESTEPS, progress_bar=True)
-    model.save("soft_gripper_ppo_pneumatic3")
+    model.save("soft_gripper_ppo_pneumatic4")
+    env.save("vec_normalize.pkl") # Save the normalization statistics!
     print("Training complete and model saved.")
     env.close()
