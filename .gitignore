@@ -1,3 +1,7 @@
+*.zip
+training_runs/
+*.pkl
+
 # Python-generated files
 __pycache__/
 *.py[oc]
