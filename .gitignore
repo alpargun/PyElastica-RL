@@ -1,6 +1,10 @@
 *.zip
 training_runs/
 *.pkl
+*_runs/
+run_*
+figures/
+old/
 
 # Python-generated files
 __pycache__/
