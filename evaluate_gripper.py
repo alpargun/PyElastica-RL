@@ -4,7 +4,7 @@ import matplotlib.animation as animation
 from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 
-from train_gripper_final import SoftGripperEnv
+from train_gripper import SoftGripperEnv
 
 if __name__ == "__main__":
     
