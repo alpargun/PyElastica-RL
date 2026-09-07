@@ -65,7 +65,7 @@ if __name__ == "__main__":
         line1.set_3d_properties(pos[2, :])
         return line1,
 
-    ani = animation.FuncAnimation(fig, update, frames=len(arm_history), interval=100, blit=False)
+    ani = animation.FuncAnimation(fig, update, frames=len(arm_history[:-1]), interval=100, blit=False)
 
     if args.save:
         ani.save(args.save, writer=animation.PillowWriter(fps=10))
