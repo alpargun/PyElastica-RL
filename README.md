@@ -1,10 +1,10 @@
 # Elastica-RL: RL Control of Soft Pneumatic Manipulators
 
 PPO policies for two underactuated soft pneumatic robots, simulated as Cosserat rods in
-[PyElastica](https://github.com/GazzolaLab/PyElastica): 
-- a three-bellow continuum trunk reaching to
-targets across its workspace, 
-- and a dual-finger gripper closing onto a target.
+[PyElastica](https://github.com/GazzolaLab/PyElastica):
+
+- a three-bellow continuum trunk reaching to targets across its workspace
+- a dual-finger gripper closing onto a target
 
 <p align="center">
   <img src="demo/trunk.gif" width="45%"/>
@@ -29,8 +29,7 @@ kappa_x = k_max * ( P1 - 0.5*P2 - 0.5*P3 )
 kappa_y = k_max * ( sqrt(3)/2 * P2 - sqrt(3)/2 * P3 )
 ```
 
-`k_max` is calibrated against static pressure-deformation curves from a volumetric ANSYS model, so
-tip deflection at 100 kPa matches between the two simulators.
+`k_max` bounds the curvature at full pressure and sets the reachable workspace.
 
 Actions are clipped to non-negative pressure. In a `[-1, 1]` space a freshly initialized network
 outputs ~0, which maps to half-inflating all three chambers at once. That is co-contraction: on
@@ -53,23 +52,25 @@ Three layers, resampled every episode:
 
 ## What randomization changes
 
-Without it, the policy converges in 500k timesteps and looks excellent. It has actually learned to
-whip: hold off actuating until the last moment, then strike the target. That only works because
-`a = 1.0` makes inflation instant. Add any real latency at evaluation and it overshoots or stalls.
+Across 50 episodes drawn from the same randomization ranges used in training:
 
-With randomization the trunk needs roughly 2M timesteps for the critic to stabilize against the
-stochastic physics, and converges to conservative braking that holds whether the episode draws a
-stiff rod with sluggish air or a compliant rod with instant air. Mean episodic reward is ~911,
-against a ~1600 bound that assumes teleporting to the target on frame zero.
+| | success within 5 cm | mean tip error |
+| --- | --- | --- |
+| Trunk, trained without randomization | 58% | 6.5 cm (10.8% of length) |
+| Trunk, randomized | 92% | 2.4 cm (4.0%) |
+| Gripper, randomized | 100% | 0.8 cm (1.6%) |
+
+The randomized trunk needs roughly 2M timesteps for the critic to stabilize against the stochastic
+physics, and converges to conservative braking that holds whether the episode draws a stiff rod
+with sluggish air or a compliant rod with instant air.
 
 ## Rewards
 
 - Trunk: potential shaping on change in tip-target distance, an absolute distance penalty, a
-distance-scaled bonus inside a 5 cm zone, and a tip-velocity penalty for braking.
-
-- Gripper: summed fingertip distances, precision bonus, a symmetry penalty on `|x1 + x2|` to keep the
-grasp centered, velocity damping, and a hard cross-over penalty so the two rods stay out of
-non-physical overlap without a contact model.
+  distance-scaled bonus inside a 5 cm zone, and a tip-velocity penalty for braking.
+- Gripper: summed fingertip distances, precision bonus, a symmetry penalty on `|x1 + x2|` to keep
+  the grasp centered, velocity damping, and a hard cross-over penalty so the two rods stay out of
+  non-physical overlap without a contact model.
 
 ## Layout
 
@@ -80,6 +81,7 @@ encoder.py                   shared MLP feature extractor
 train_elephant_trunk.py      PPO, 8 SubprocVecEnv workers, VecNormalize
 train_gripper.py
 evaluate_*.py                deterministic rollout + 3D animation
+eval_stats.py                success rate and tip error over N episodes
 ```
 
 Trunk observation is tip position, target error vector, tip velocity, and chamber pressures.
@@ -91,6 +93,7 @@ Episodes run 100 control steps (10 simulated seconds) at dt = 1e-4.
 uv sync
 uv run train_elephant_trunk.py
 uv run evaluate_elephant_trunk.py runs/trunk/run_<timestamp> --save demo/trunk.gif
+uv run eval_stats.py trunk runs/trunk/run_<timestamp> --episodes 50
 tensorboard --logdir runs/
 ```
 
